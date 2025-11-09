@@ -1,0 +1,37 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="F logo">
+  <defs>
+    <linearGradient id="faceGradient" x1="20%" y1="10%" x2="80%" y2="95%">
+      <stop offset="0%" stop-color="#4DCEFF" />
+      <stop offset="45%" stop-color="#1E8CFF" />
+      <stop offset="100%" stop-color="#0C3DFF" />
+    </linearGradient>
+    <linearGradient id="edgeHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.75" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+    <radialGradient id="sheen" cx="30%" cy="20%" r="75%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.65" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </radialGradient>
+    <filter id="threeD" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" result="blur" />
+      <feSpecularLighting in="blur" surfaceScale="6" specularConstant="0.6" specularExponent="35" result="spec">
+        <fePointLight x="-120" y="-120" z="200" />
+      </feSpecularLighting>
+      <feComposite in="spec" in2="SourceAlpha" operator="in" result="specOut" />
+      <feComposite in="SourceGraphic" in2="specOut" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="litPaint" />
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#0A2466" flood-opacity="0.35" result="shadow" />
+      <feMerge>
+        <feMergeNode in="shadow" />
+        <feMergeNode in="litPaint" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <g filter="url(#threeD)">
+    <path fill="url(#faceGradient)" d="M30 20H90V38H48V54H84V72H48V106H30Z" />
+    <path fill="url(#faceGradient)" d="M58 72H74V98L58 72Z" />
+    <path fill="url(#edgeHighlight)" d="M30 20H90V28H48V20Z" />
+    <path fill="url(#sheen)" d="M30 20H55L83 48H58Z" />
+  </g>
+</svg>
