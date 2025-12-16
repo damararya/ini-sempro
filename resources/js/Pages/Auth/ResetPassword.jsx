@@ -55,6 +55,7 @@ export default function ResetPassword({ token, email }) {
                             autoComplete="new-password"
                             isFocused={true}
                             onChange={onHandleChange}
+                            enablePasswordToggle
                         />
                         <InputError message={errors.password} className="text-xs text-rose-300" />
                     </div>
@@ -68,6 +69,7 @@ export default function ResetPassword({ token, email }) {
                             value={data.password_confirmation}
                             autoComplete="new-password"
                             onChange={onHandleChange}
+                            enablePasswordToggle
                         />
                         <InputError message={errors.password_confirmation} className="text-xs text-rose-300" />
                     </div>
@@ -80,4 +82,3 @@ export default function ResetPassword({ token, email }) {
         </GuestLayout>
     );
 }
-

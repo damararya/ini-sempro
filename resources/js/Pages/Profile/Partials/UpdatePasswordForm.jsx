@@ -54,6 +54,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                         onChange={(event) => setData('current_password', event.target.value)}
                         type="password"
                         autoComplete="current-password"
+                        enablePasswordToggle
                     />
 
                     <InputError message={errors.current_password} className="text-xs text-rose-300" />
@@ -69,6 +70,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                         onChange={(event) => setData('password', event.target.value)}
                         type="password"
                         autoComplete="new-password"
+                        enablePasswordToggle
                     />
 
                     <InputError message={errors.password} className="text-xs text-rose-300" />
@@ -83,6 +85,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                         onChange={(event) => setData('password_confirmation', event.target.value)}
                         type="password"
                         autoComplete="new-password"
+                        enablePasswordToggle
                     />
 
                     <InputError message={errors.password_confirmation} className="text-xs text-rose-300" />

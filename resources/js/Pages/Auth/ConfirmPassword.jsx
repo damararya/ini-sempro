@@ -45,6 +45,7 @@ export default function ConfirmPassword() {
                             value={data.password}
                             isFocused={true}
                             onChange={handleOnChange}
+                            enablePasswordToggle
                         />
                         <InputError message={errors.password} className="text-xs text-rose-300" />
                     </div>
@@ -57,4 +58,3 @@ export default function ConfirmPassword() {
         </GuestLayout>
     );
 }
-

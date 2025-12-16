@@ -24,7 +24,7 @@ class DashboardController extends Controller // Mendefinisikan kelas controller 
         $end = $now->copy()->endOfMonth(); // Menentukan akhir bulan berjalan.
 
         $familiesCount = (int) User::query() // Menginisiasi query untuk menghitung keluarga aktif.
-            ->whereNotNull('last_login_at') // Menyaring pengguna yang pernah login.
+            ->where('is_admin', false) // Hanya menghitung warga biasa, bukan admin.
             ->count(); // Menghitung total keluarga yang memenuhi kriteria.
 
         $collected = (int) Iuran::query() // Membentuk query untuk total pemasukan bulan berjalan.

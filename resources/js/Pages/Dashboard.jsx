@@ -69,7 +69,7 @@ export default function Dashboard(props) {
                     </section>
                 )}
 
-                <section className={`grid grid-cols-1 gap-6 ${isAdmin ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+                <section className={`grid grid-cols-1 gap-6 ${isAdmin ? 'md:grid-cols-1' : 'md:grid-cols-2'}`}>
                     {isAdmin && (
                         <article className="panel-muted relative overflow-hidden px-6 py-7">
                             <div className="pointer-events-none absolute -top-12 right-0 h-32 w-32 rounded-full bg-[radial-gradient(circle,rgba(253,224,71,0.22),transparent_65%)] blur-3xl" />
@@ -89,55 +89,59 @@ export default function Dashboard(props) {
                         </article>
                     )}
 
-                    <article className="panel-muted relative overflow-hidden px-6 py-7">
-                        <div className="pointer-events-none absolute -top-16 right-6 h-32 w-32 rounded-full bg-[radial-gradient(circle,rgba(34,197,94,0.28),transparent_65%)] blur-3xl" />
-                        <div className="flex flex-col gap-6">
-                            <div className="flex items-center justify-between">
-                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-400/20 text-emerald-200">
-                                    <TrashIcon className="h-7 w-7" />
+                    {!isAdmin && (
+                        <>
+                            <article className="panel-muted relative overflow-hidden px-6 py-7">
+                                <div className="pointer-events-none absolute -top-16 right-6 h-32 w-32 rounded-full bg-[radial-gradient(circle,rgba(34,197,94,0.28),transparent_65%)] blur-3xl" />
+                                <div className="flex flex-col gap-6">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-400/20 text-emerald-200">
+                                            <TrashIcon className="h-7 w-7" />
+                                        </div>
+                                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                            trashPaid ? 'bg-emerald-500/20 text-emerald-200' : 'bg-white/10 text-white/70'
+                                        }`}>
+                                            {trashPaid ? 'Sudah dibayar' : 'Belum dibayar'}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-white">Iuran Sampah</h3>
+                                        <p className="mt-1 text-sm text-white/60">Pembayaran pengelolaan sampah lingkungan bulan berjalan.</p>
+                                    </div>
+                                    <ActionLink
+                                        href={route('iuran.pay.create', { type: 'sampah' })}
+                                        label={trashPaid ? 'Lihat Riwayat' : 'Bayar Sekarang'}
+                                        variant={trashPaid ? 'secondary' : 'primary'}
+                                    />
                                 </div>
-                                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                    trashPaid ? 'bg-emerald-500/20 text-emerald-200' : 'bg-white/10 text-white/70'
-                                }`}>
-                                    {trashPaid ? 'Sudah dibayar' : 'Belum dibayar'}
-                                </span>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold text-white">Iuran Sampah</h3>
-                                <p className="mt-1 text-sm text-white/60">Pembayaran pengelolaan sampah lingkungan bulan berjalan.</p>
-                            </div>
-                            <ActionLink
-                                href={route('iuran.pay.create', { type: 'sampah' })}
-                                label={trashPaid ? 'Lihat Riwayat' : 'Bayar Sekarang'}
-                                variant={trashPaid ? 'secondary' : 'primary'}
-                            />
-                        </div>
-                    </article>
+                            </article>
 
-                    <article className="panel-muted relative overflow-hidden px-6 py-7">
-                        <div className="pointer-events-none absolute -top-16 right-6 h-32 w-32 rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.28),transparent_65%)] blur-3xl" />
-                        <div className="flex flex-col gap-6">
-                            <div className="flex items-center justify-between">
-                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-400/20 text-sky-200">
-                                    <ShieldCheckIcon className="h-7 w-7" />
+                            <article className="panel-muted relative overflow-hidden px-6 py-7">
+                                <div className="pointer-events-none absolute -top-16 right-6 h-32 w-32 rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.28),transparent_65%)] blur-3xl" />
+                                <div className="flex flex-col gap-6">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-400/20 text-sky-200">
+                                            <ShieldCheckIcon className="h-7 w-7" />
+                                        </div>
+                                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                            rondaPaid ? 'bg-sky-500/20 text-sky-100' : 'bg-white/10 text-white/70'
+                                        }`}>
+                                            {rondaPaid ? 'Sudah dibayar' : 'Belum dibayar'}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-white">Iuran Ronda</h3>
+                                        <p className="mt-1 text-sm text-white/60">Dukungan keamanan lingkungan melalui jadwal ronda.</p>
+                                    </div>
+                                    <ActionLink
+                                        href={route('iuran.pay.create', { type: 'ronda' })}
+                                        label={rondaPaid ? 'Lihat Riwayat' : 'Bayar Sekarang'}
+                                        variant={rondaPaid ? 'secondary' : 'primary'}
+                                    />
                                 </div>
-                                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                    rondaPaid ? 'bg-sky-500/20 text-sky-100' : 'bg-white/10 text-white/70'
-                                }`}>
-                                    {rondaPaid ? 'Sudah dibayar' : 'Belum dibayar'}
-                                </span>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold text-white">Iuran Ronda</h3>
-                                <p className="mt-1 text-sm text-white/60">Dukungan keamanan lingkungan melalui jadwal ronda.</p>
-                            </div>
-                            <ActionLink
-                                href={route('iuran.pay.create', { type: 'ronda' })}
-                                label={rondaPaid ? 'Lihat Riwayat' : 'Bayar Sekarang'}
-                                variant={rondaPaid ? 'secondary' : 'primary'}
-                            />
-                        </div>
-                    </article>
+                            </article>
+                        </>
+                    )}
                 </section>
             </div>
         </AuthenticatedLayout>

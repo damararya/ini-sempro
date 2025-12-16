@@ -26,6 +26,7 @@ export default function Pay(props) {
         setData('amount', fixedAmount);
     }, [fixedAmount, setData]);
 
+    const isAdmin = Boolean(props?.auth?.user?.is_admin);
     const isSampah = type === 'sampah';
     const title = isSampah ? 'Bayar Iuran Sampah' : 'Bayar Iuran Ronda';
     const otherType = isSampah ? 'ronda' : 'sampah';
@@ -136,38 +137,40 @@ export default function Pay(props) {
                     </article>
                 </section>
 
-                <section className="panel-muted px-6 py-8 space-y-6">
-                    {paidThisPeriod && (
-                        <div className="rounded-2xl border border-sky-400/30 bg-sky-500/15 px-5 py-4 text-sm text-sky-100 shadow-[0_20px_50px_-30px_rgba(56,189,248,0.55)]">
-                            Anda sudah membayar untuk periode ini. Pembayaran ulang akan memperbarui tanggal dan menggantikan nominal yang ada.
-                        </div>
-                    )}
-
-                    <form onSubmit={submit} className="space-y-6">
-                        <div className="space-y-3">
-                            <span className={badgeClasses}>Nominal Tetap</span>
-                            <div className="rounded-[1.75rem] border border-white/12 bg-white/10 px-6 py-5 shadow-[0_25px_65px_-40px_rgba(37,99,235,0.9)]">
-                                <div className="text-sm text-white/60">Jumlah yang akan dibayarkan</div>
-                                <div className="mt-2 text-4xl font-semibold text-white">{formatIDR(fixedAmount)}</div>
-                                <p className="mt-3 text-xs text-white/50">
-                                    Pembayaran ini tercatat otomatis dan dapat diakses pada riwayat kapan pun diperlukan.
-                                </p>
+                {!isAdmin && (
+                    <section className="panel-muted px-6 py-8 space-y-6">
+                        {paidThisPeriod && (
+                            <div className="rounded-2xl border border-sky-400/30 bg-sky-500/15 px-5 py-4 text-sm text-sky-100 shadow-[0_20px_50px_-30px_rgba(56,189,248,0.55)]">
+                                Anda sudah membayar untuk periode ini. Pembayaran ulang akan memperbarui tanggal dan menggantikan nominal yang ada.
                             </div>
-                            {errors.amount && <p className="text-xs text-rose-300">{errors.amount}</p>}
-                        </div>
+                        )}
 
-                        <input type="hidden" name="amount" value={data.amount} />
+                        <form onSubmit={submit} className="space-y-6">
+                            <div className="space-y-3">
+                                <span className={badgeClasses}>Nominal Tetap</span>
+                                <div className="rounded-[1.75rem] border border-white/12 bg-white/10 px-6 py-5 shadow-[0_25px_65px_-40px_rgba(37,99,235,0.9)]">
+                                    <div className="text-sm text-white/60">Jumlah yang akan dibayarkan</div>
+                                    <div className="mt-2 text-4xl font-semibold text-white">{formatIDR(fixedAmount)}</div>
+                                    <p className="mt-3 text-xs text-white/50">
+                                        Pembayaran ini tercatat otomatis dan dapat diakses pada riwayat kapan pun diperlukan.
+                                    </p>
+                                </div>
+                                {errors.amount && <p className="text-xs text-rose-300">{errors.amount}</p>}
+                            </div>
 
-                        <div className="flex flex-wrap items-center gap-3">
-                            <PrimaryButton type="submit" disabled={processing}>
-                                {processing ? 'Memproses...' : 'Bayar Sekarang'}
-                            </PrimaryButton>
-                            <Link href={route('dashboard')} className={navLinkClass}>
-                                Kembali ke Dasbor
-                            </Link>
-                        </div>
-                    </form>
-                </section>
+                            <input type="hidden" name="amount" value={data.amount} />
+
+                            <div className="flex flex-wrap items-center gap-3">
+                                <PrimaryButton type="submit" disabled={processing}>
+                                    {processing ? 'Memproses...' : 'Bayar Sekarang'}
+                                </PrimaryButton>
+                                <Link href={route('dashboard')} className={navLinkClass}>
+                                    Kembali ke Dasbor
+                                </Link>
+                            </div>
+                        </form>
+                    </section>
+                )}
 
                 {pendingProof && (
                     <section className="panel-muted px-6 py-8 space-y-5">

@@ -6,6 +6,7 @@ use App\Models\Iuran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class UserIuranController extends Controller
@@ -110,8 +111,10 @@ class UserIuranController extends Controller
         \Midtrans\Config::$isSanitized = (bool) config('midtrans.is_sanitized');
         \Midtrans\Config::$is3ds = (bool) config('midtrans.is_3ds');
 
-        // order_id maximum 50 karakter: format iuran-{jenis}-{user}-{random12} agar mudah dilacak.
-        $orderId = sprintf('iuran-%s-%d-%s', $type, $user->id, \Illuminate\Support\Str::random(12));
+        // order_id maximum 50 karakter: format iuran-{jenis}-(slug-nama)-{random12} agar mudah dilacak.
+        $nameSlug = Str::slug((string) $user->name, '-');
+        $nameSlug = substr($nameSlug, 0, 20) ?: 'warga';
+        $orderId = sprintf('iuran-%s-(%s)-%s', $type, $nameSlug, Str::random(12));
         $grossAmount = $fixedAmount;
         $itemName = 'Iuran ' . ucfirst($type) . ' ' . $itemPeriodLabel;
 
@@ -144,7 +147,7 @@ class UserIuranController extends Controller
                 'name' => $itemName,
             ]],
             'callbacks' => [
-                'finish' => route('midtrans.finish'),
+                'finish' => route('midtrans.finish', ['type' => $type]),
             ],
         ];
 

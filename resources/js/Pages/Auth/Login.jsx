@@ -151,6 +151,7 @@ export default function Login({ status, canResetPassword }) {
                                                     value={data.password}
                                                     autoComplete="current-password"
                                                     onChange={handleOnChange}
+                                                    enablePasswordToggle
                                                 />
                                                 <InputError message={errors.password} className="text-xs text-rose-300" />
                                             </div>
@@ -202,4 +203,3 @@ export default function Login({ status, canResetPassword }) {
         </GuestLayout>
     );
 }
-

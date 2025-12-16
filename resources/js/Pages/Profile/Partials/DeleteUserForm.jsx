@@ -68,6 +68,7 @@ export default function DeleteUserForm({ className = '' }) {
                             onChange={(event) => setData('password', event.target.value)}
                             isFocused
                             placeholder="Masukkan kata sandi"
+                            enablePasswordToggle
                         />
 
                         <InputError message={errors.password} className="text-xs text-rose-300" />

@@ -46,38 +46,44 @@ Route::middleware('auth')->group(function () { // Membuat grup rute yang membutu
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update'); // Rute untuk memperbarui data profil
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy'); // Rute untuk menghapus akun profil
 
-    // Admin dashboard (auth + gate)
-    Route::get('/admin/dashboard', AdminDashboardController::class) // Rute dashboard admin berbasis single action controller
-        ->middleware('can:access-admin') // Membatasi akses hanya untuk user dengan izin admin
-        ->name('admin.dashboard'); // Memberi nama rute dashboard admin
+    // Admin-only area (auth + gate) yang otomatis menolak warga biasa
+    Route::prefix('admin') // Memberikan prefix /admin ke setiap rute di blok ini
+        ->name('admin.') // Prefix nama rute agar mudah direferensikan
+        ->middleware('admin.access') // Pastikan hanya admin yang bisa masuk dan warga diarahkan balik
+        ->group(function () {
+            Route::get('/', function () { // Mengarahkan /admin langsung ke dashboard admin
+                return redirect()->route('admin.dashboard');
+            })->name('home'); // Nama rute baru untuk akses cepat ke /admin
 
-    // Admin Iuran CRUD
-    Route::middleware('can:access-admin')->group(function () { // Grup rute admin iuran yang memerlukan izin admin
-        Route::get('/admin/iurans/{iuran}/proof', [IuranController::class, 'proof']) // Rute untuk melihat bukti pembayaran iuran
-            ->name('admin.iurans.proof'); // Memberi nama rute bukti iuran admin
+            Route::get('/dashboard', AdminDashboardController::class) // Rute dashboard admin berbasis single action controller
+                ->name('dashboard'); // Menjaga nama rute lama agar kompatibel
 
-        Route::resource('/admin/iurans', IuranController::class) // Resource controller untuk CRUD iuran admin
-            ->except(['show']) // Menghapus aksi show karena tidak diperlukan
-            ->names('admin.iurans'); // Mengatur prefix nama rute resource menjadi admin.iurans
+            Route::get('/iurans/{iuran}/proof', [IuranController::class, 'proof']) // Rute untuk melihat bukti pembayaran iuran
+                ->name('iurans.proof'); // Nama rute bukti iuran admin (otomatis diawali admin.)
+
+            Route::resource('iurans', IuranController::class) // Resource controller untuk CRUD iuran admin
+                ->except(['show']); // Menghapus aksi show karena tidak diperlukan
+        });
+
+    // User-facing payment routes (blocked for admin role)
+    Route::middleware('no-admin-payments')->group(function () {
+        Route::get('/iuran/pay/{type}', [UserIuranController::class, 'create']) // Form pembayaran iuran berdasarkan jenis
+            ->whereIn('type', ['sampah', 'ronda']) // Membatasi parameter type hanya ke sampah atau ronda
+            ->name('iuran.pay.create'); // Memberi nama rute form pembayaran iuran
+        Route::post('/iuran/pay/{type}', [UserIuranController::class, 'store']) // Menyimpan pembayaran iuran yang dikirim user
+            ->whereIn('type', ['sampah', 'ronda']) // Membatasi jenis iuran yang valid
+            ->name('iuran.pay.store'); // Memberi nama rute penyimpanan pembayaran iuran
+        Route::post('/iuran/proof/{iuran}', [UserIuranController::class, 'storeProof']) // Menyimpan bukti pembayaran iuran
+            ->name('iuran.pay.proof'); // Memberi nama rute unggah bukti pembayaran
+        Route::get('/iuran/proof/{iuran}', [UserIuranController::class, 'showProof']) // Menampilkan bukti pembayaran iuran untuk pemilik atau admin
+            ->name('iuran.pay.proof.show'); // Memberi nama rute penayangan bukti pembayaran
     });
-
-    // User-facing payment routes
-    Route::get('/iuran/pay/{type}', [UserIuranController::class, 'create']) // Form pembayaran iuran berdasarkan jenis
-        ->whereIn('type', ['sampah', 'ronda']) // Membatasi parameter type hanya ke sampah atau ronda
-        ->name('iuran.pay.create'); // Memberi nama rute form pembayaran iuran
-    Route::post('/iuran/pay/{type}', [UserIuranController::class, 'store']) // Menyimpan pembayaran iuran yang dikirim user
-        ->whereIn('type', ['sampah', 'ronda']) // Membatasi jenis iuran yang valid
-        ->name('iuran.pay.store'); // Memberi nama rute penyimpanan pembayaran iuran
-    Route::post('/iuran/proof/{iuran}', [UserIuranController::class, 'storeProof']) // Menyimpan bukti pembayaran iuran
-        ->name('iuran.pay.proof'); // Memberi nama rute unggah bukti pembayaran
-    Route::get('/iuran/proof/{iuran}', [UserIuranController::class, 'showProof']) // Menampilkan bukti pembayaran iuran untuk pemilik atau admin
-        ->name('iuran.pay.proof.show'); // Memberi nama rute penayangan bukti pembayaran
 
     // Midtrans return URLs (no auth required in practice, but safe to allow access)
 }); // Menutup grup rute yang membutuhkan autentikasi
 
 // Midtrans finish/unfinish/error redirects
-Route::get('/payment/finish', [MidtransController::class, 'finish'])->name('midtrans.finish'); // Menangani callback sukses pembayaran
+Route::get('/payment/finish/{type?}', [MidtransController::class, 'finish'])->name('midtrans.finish'); // Menangani callback sukses pembayaran
 Route::get('/payment/unfinish', [MidtransController::class, 'unfinish'])->name('midtrans.unfinish'); // Menangani callback pembayaran belum selesai
 Route::get('/payment/error', [MidtransController::class, 'error'])->name('midtrans.error'); // Menangani callback pembayaran gagal
 

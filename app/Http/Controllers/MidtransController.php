@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Iuran;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class MidtransController extends Controller
 {
@@ -22,10 +24,14 @@ class MidtransController extends Controller
     /**
      * Callback ketika pengguna menyelesaikan proses pembayaran.
      */
-    public function finish(Request $request)
+    public function finish(Request $request, ?string $type = null)
     {
+        $type = in_array($type, ['sampah', 'ronda'], true)
+            ? $type
+            : 'sampah';
+
         // Status akhir tetap menunggu notifikasi server-to-server agar data akurat.
-        return redirect()->route('dashboard')
+        return redirect()->route('iuran.pay.create', ['type' => $type])
             ->with('message', 'Terima kasih! Jika pembayaran berhasil, status akan terupdate segera.');
     }
 
@@ -66,18 +72,18 @@ class MidtransController extends Controller
         $fraud = (string) ($notif->fraud_status ?? '');
         $gross = (int) ($notif->gross_amount ?? 0);
 
-        // Format order id: iuran-{type}-{userId}-{random}
-        $parts = explode('-', $orderId);
-        if (count($parts) < 4 || $parts[0] !== 'iuran') {
+        // Format order id: iuran-{type}-(slug-nama)-{random}
+        $matches = [];
+        if (!preg_match('/^iuran-(?P<type>[a-z]+)-\((?P<slug>[a-z0-9-]+)\)-(?P<token>[A-Za-z0-9]+)$/i', $orderId, $matches)) {
             Log::warning('Unknown order id format', ['order_id' => $orderId]);
             return response()->json(['ok' => true]);
         }
 
-        $type = $parts[1];
-        $userId = (int) $parts[2];
+        $type = strtolower($matches['type'] ?? '');
+        $nameSlug = Str::of($matches['slug'] ?? '')->lower()->value();
 
-        if (!in_array($type, ['sampah', 'ronda'], true) || $userId <= 0) {
-            Log::warning('Invalid order id parts', compact('orderId', 'type', 'userId'));
+        if (!in_array($type, ['sampah', 'ronda'], true)) {
+            Log::warning('Invalid order id parts', compact('orderId', 'type', 'nameSlug'));
             return response()->json(['ok' => true]);
         }
 
@@ -106,6 +112,15 @@ class MidtransController extends Controller
                 }
 
                 $iuran = Iuran::query()->where('order_id', $orderId)->first();
+                $userId = $iuran?->user_id;
+
+                if (!$userId) {
+                    $userId = optional(
+                        User::query()
+                            ->get()
+                            ->first(fn (User $user) => Str::slug((string) $user->name, '-') === $nameSlug)
+                    )->id;
+                }
 
                 if ($iuran) {
                     $iuran->update([
@@ -113,7 +128,7 @@ class MidtransController extends Controller
                         'paid' => true,
                         'paid_at' => now(),
                     ]);
-                } else {
+                } elseif ($userId) {
                     $start = now()->copy()->startOfMonth();
                     $end = now()->copy()->endOfMonth();
 
@@ -142,6 +157,11 @@ class MidtransController extends Controller
                             'order_id' => $orderId,
                         ]);
                     }
+                } else {
+                    Log::warning('Midtrans notification without matching user record', [
+                        'order_id' => $orderId,
+                        'slug' => $nameSlug,
+                    ]);
                 }
             } catch (\Throwable $e) {
                 // Saat notifikasi ganda/ada error, cukup log agar bisa ditelusuri.

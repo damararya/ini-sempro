@@ -97,6 +97,7 @@ export default function Register() {
                             autoComplete="new-password"
                             onChange={handleOnChange}
                             required
+                            enablePasswordToggle
                         />
                         <InputError message={errors.password} className="text-xs text-rose-300" />
                     </div>
@@ -111,6 +112,7 @@ export default function Register() {
                             autoComplete="new-password"
                             onChange={handleOnChange}
                             required
+                            enablePasswordToggle
                         />
                         <InputError message={errors.password_confirmation} className="text-xs text-rose-300" />
                     </div>
