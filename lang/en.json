@@ -1,0 +1,7 @@
+{
+    "Reset Password Notification": "Notifikasi Atur Ulang Kata Sandi",
+    "You are receiving this email because we received a password reset request for your account.": "Kami mengirimkan email ini karena ada permintaan untuk mengatur ulang kata sandi akun Anda.",
+    "Reset Password": "Atur Ulang Kata Sandi",
+    "This password reset link will expire in :count minutes.": "Tautan pengaturan ulang ini akan kadaluarsa dalam :count menit.",
+    "If you did not request a password reset, no further action is required.": "Jika Anda tidak meminta pengaturan ulang kata sandi, abaikan email ini."
+}

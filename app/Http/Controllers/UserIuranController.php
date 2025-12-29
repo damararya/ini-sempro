@@ -111,10 +111,10 @@ class UserIuranController extends Controller
         \Midtrans\Config::$isSanitized = (bool) config('midtrans.is_sanitized');
         \Midtrans\Config::$is3ds = (bool) config('midtrans.is_3ds');
 
-        // order_id maximum 50 karakter: format iuran-{jenis}-(slug-nama)-{random12} agar mudah dilacak.
-        $nameSlug = Str::slug((string) $user->name, '-');
-        $nameSlug = substr($nameSlug, 0, 20) ?: 'warga';
-        $orderId = sprintf('iuran-%s-(%s)-%s', $type, $nameSlug, Str::random(12));
+        // order_id maximum 50 karakter: format {jenisCode}{userId}{bulanTahun}{random6} tanpa strip.
+        $typeCode = $type === 'sampah' ? '1' : '2';
+        $periodCode = $periodEnd->format('my');
+        $orderId = sprintf('%s%s%s%s', $typeCode, $user->id, $periodCode, Str::random(6));
         $grossAmount = $fixedAmount;
         $itemName = 'Iuran ' . ucfirst($type) . ' ' . $itemPeriodLabel;
 

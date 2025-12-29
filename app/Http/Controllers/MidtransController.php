@@ -72,18 +72,33 @@ class MidtransController extends Controller
         $fraud = (string) ($notif->fraud_status ?? '');
         $gross = (int) ($notif->gross_amount ?? 0);
 
-        // Format order id: iuran-{type}-(slug-nama)-{random}
+        // Format order id: {jenisCode}{userId}{bulanTahun}{random6} (baru),
+        // iuran-{type}-{userId}-{random6} (transisi), atau iuran-{type}-(slug-nama)-{random} (lama).
         $matches = [];
-        if (!preg_match('/^iuran-(?P<type>[a-z]+)-\((?P<slug>[a-z0-9-]+)\)-(?P<token>[A-Za-z0-9]+)$/i', $orderId, $matches)) {
+        $type = '';
+        $userIdFromOrder = null;
+        $nameSlug = null;
+        if (preg_match('/^(?P<typeCode>[12])(?P<userId>\d+)(?P<period>\d{4})(?P<token>[A-Za-z0-9]{6})$/', $orderId, $matches)) {
+            $type = ($matches['typeCode'] ?? '') === '1' ? 'sampah' : 'ronda';
+            $userIdFromOrder = (int) ($matches['userId'] ?? 0);
+        } elseif (preg_match('/^iuran-(?P<type>[a-z]+)-(?P<userId>\d+)-(?P<token>[A-Za-z0-9]{6})$/i', $orderId, $matches)) {
+            $type = strtolower($matches['type'] ?? '');
+            $userIdFromOrder = (int) ($matches['userId'] ?? 0);
+        } elseif (preg_match('/^iuran-(?P<type>[a-z]+)-\((?P<slug>[a-z0-9-]+)\)-(?P<token>[A-Za-z0-9]+)$/i', $orderId, $matches)) {
+            $type = strtolower($matches['type'] ?? '');
+            $nameSlug = Str::of($matches['slug'] ?? '')->lower()->value();
+        } else {
             Log::warning('Unknown order id format', ['order_id' => $orderId]);
             return response()->json(['ok' => true]);
         }
 
-        $type = strtolower($matches['type'] ?? '');
-        $nameSlug = Str::of($matches['slug'] ?? '')->lower()->value();
-
         if (!in_array($type, ['sampah', 'ronda'], true)) {
-            Log::warning('Invalid order id parts', compact('orderId', 'type', 'nameSlug'));
+            Log::warning('Invalid order id parts', [
+                'orderId' => $orderId,
+                'type' => $type,
+                'userId' => $userIdFromOrder,
+                'nameSlug' => $nameSlug,
+            ]);
             return response()->json(['ok' => true]);
         }
 
@@ -112,9 +127,9 @@ class MidtransController extends Controller
                 }
 
                 $iuran = Iuran::query()->where('order_id', $orderId)->first();
-                $userId = $iuran?->user_id;
+                $userId = $iuran?->user_id ?? $userIdFromOrder;
 
-                if (!$userId) {
+                if (!$userId && $nameSlug) {
                     $userId = optional(
                         User::query()
                             ->get()
