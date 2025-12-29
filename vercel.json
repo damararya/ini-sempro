@@ -48,9 +48,11 @@
         "DB_DATABASE": "railway",
         "DB_USERNAME": "root",
         "MAIL_MAILER": "smtp",
-        "MAIL_HOST": "smtp.gmail.com",
-        "MAIL_PORT": "587",
-        "MAIL_ENCRYPTION": "tls",
+        "MAIL_HOST": "smtp.resend.com",
+        "MAIL_PORT": "465",
+        "MAIL_ENCRYPTION": "ssl",
+        "MAIL_USERNAME": "resend",
+        "MAIL_FROM_ADDRESS": "onboarding@resend.dev",
         "MAIL_FROM_NAME": "Sempro App"
     }
 }
