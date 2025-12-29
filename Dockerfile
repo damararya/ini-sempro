@@ -1,4 +1,4 @@
-FROM php:8.2-apache
+FROM php:8.2-fpm
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -10,17 +10,16 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     zip \
     unzip \
+    nginx \
     nodejs \
-    npm
+    npm \
+    supervisor
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
-
-# Disable conflicting MPM and enable required modules
-RUN a2dismod mpm_event && a2enmod mpm_prefork rewrite
 
 # Get Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -39,13 +38,42 @@ RUN npm ci && npm run build
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Configure Apache
-RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
+# Configure Nginx
+RUN echo 'server { \n\
+    listen 80; \n\
+    server_name _; \n\
+    root /var/www/html/public; \n\
+    index index.php; \n\
+    \n\
+    location / { \n\
+        try_files $uri $uri/ /index.php?$query_string; \n\
+    } \n\
+    \n\
+    location ~ \.php$ { \n\
+        fastcgi_pass 127.0.0.1:9000; \n\
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name; \n\
+        include fastcgi_params; \n\
+    } \n\
+}' > /etc/nginx/sites-available/default
+
+# Configure Supervisor
+RUN echo '[supervisord] \n\
+nodaemon=true \n\
+\n\
+[program:php-fpm] \n\
+command=/usr/local/sbin/php-fpm \n\
+autostart=true \n\
+autorestart=true \n\
+\n\
+[program:nginx] \n\
+command=/usr/sbin/nginx -g "daemon off;" \n\
+autostart=true \n\
+autorestart=true' > /etc/supervisor/conf.d/supervisord.conf
 
 # Expose port
 EXPOSE 80
 
-# Start Apache
-CMD ["apache2-foreground"]
-
+# Start Supervisor
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
