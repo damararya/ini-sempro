@@ -8,8 +8,20 @@
     },
     "routes": [
         {
-            "src": "/build/assets/(.*)",
-            "dest": "/build/assets/$1"
+            "src": "/build/(.*)",
+            "dest": "/build/$1"
+        },
+        {
+            "src": "/images/(.*)",
+            "dest": "/images/$1"
+        },
+        {
+            "src": "/favicon.ico",
+            "dest": "/favicon.ico"
+        },
+        {
+            "src": "/robots.txt",
+            "dest": "/robots.txt"
         },
         {
             "src": "/(.*)",
