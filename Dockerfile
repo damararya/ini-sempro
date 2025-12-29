@@ -72,8 +72,16 @@ command=/usr/sbin/nginx -g "daemon off;" \n\
 autostart=true \n\
 autorestart=true' > /etc/supervisor/conf.d/supervisord.conf
 
+# Create startup script
+RUN echo '#!/bin/bash\n\
+php artisan migrate --force\n\
+php artisan config:cache\n\
+php artisan route:cache\n\
+php artisan view:cache\n\
+/usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf' > /start.sh && chmod +x /start.sh
+
 # Expose port
 EXPOSE 80
 
-# Start Supervisor
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Start with migrations
+CMD ["/start.sh"]
