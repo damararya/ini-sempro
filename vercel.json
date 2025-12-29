@@ -18,6 +18,8 @@
     ],
     "outputDirectory": "public",
     "env": {
+        "APP_ENV": "production",
+        "APP_URL": "https://ini-sempro.vercel.app",
         "APP_CONFIG_CACHE": "/tmp/bootstrap/cache/config.php",
         "APP_EVENTS_CACHE": "/tmp/bootstrap/cache/events.php",
         "APP_PACKAGES_CACHE": "/tmp/bootstrap/cache/packages.php",
