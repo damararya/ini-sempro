@@ -31,6 +31,7 @@
     "outputDirectory": "public",
     "env": {
         "APP_ENV": "production",
+        "APP_DEBUG": "false",
         "APP_URL": "https://ini-sempro.vercel.app",
         "APP_CONFIG_CACHE": "/tmp/bootstrap/cache/config.php",
         "APP_EVENTS_CACHE": "/tmp/bootstrap/cache/events.php",
@@ -40,7 +41,12 @@
         "VIEW_COMPILED_PATH": "/tmp/storage/framework/views",
         "CACHE_DRIVER": "array",
         "SESSION_DRIVER": "cookie",
-        "LOG_CHANNEL": "stderr"
+        "LOG_CHANNEL": "stderr",
+        "DB_CONNECTION": "mysql",
+        "DB_HOST": "trolley.proxy.rlwy.net",
+        "DB_PORT": "44947",
+        "DB_DATABASE": "railway",
+        "DB_USERNAME": "root"
     }
 }
 
