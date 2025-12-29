@@ -16,6 +16,17 @@
             "dest": "/api/index.php"
         }
     ],
-    "outputDirectory": "public"
+    "outputDirectory": "public",
+    "env": {
+        "APP_CONFIG_CACHE": "/tmp/bootstrap/cache/config.php",
+        "APP_EVENTS_CACHE": "/tmp/bootstrap/cache/events.php",
+        "APP_PACKAGES_CACHE": "/tmp/bootstrap/cache/packages.php",
+        "APP_ROUTES_CACHE": "/tmp/bootstrap/cache/routes.php",
+        "APP_SERVICES_CACHE": "/tmp/bootstrap/cache/services.php",
+        "VIEW_COMPILED_PATH": "/tmp/storage/framework/views",
+        "CACHE_DRIVER": "array",
+        "SESSION_DRIVER": "cookie",
+        "LOG_CHANNEL": "stderr"
+    }
 }
 

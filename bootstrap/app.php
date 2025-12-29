@@ -21,6 +21,21 @@ $app = new Illuminate\Foundation\Application(
 
 /*
 |--------------------------------------------------------------------------
+| Vercel Serverless Configuration
+|--------------------------------------------------------------------------
+|
+| When running on Vercel, the filesystem is read-only except for /tmp.
+| We need to override the storage and cache paths to use /tmp.
+|
+*/
+
+if (isset($_ENV['VERCEL']) || getenv('VERCEL')) {
+    $app->useStoragePath('/tmp/storage');
+    $app->useBootstrapPath('/tmp/bootstrap');
+}
+
+/*
+|--------------------------------------------------------------------------
 | Bind Important Interfaces
 |--------------------------------------------------------------------------
 |
