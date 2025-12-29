@@ -46,7 +46,12 @@
         "DB_HOST": "trolley.proxy.rlwy.net",
         "DB_PORT": "44947",
         "DB_DATABASE": "railway",
-        "DB_USERNAME": "root"
+        "DB_USERNAME": "root",
+        "MAIL_MAILER": "smtp",
+        "MAIL_HOST": "smtp.gmail.com",
+        "MAIL_PORT": "587",
+        "MAIL_ENCRYPTION": "tls",
+        "MAIL_FROM_NAME": "Sempro App"
     }
 }
 
