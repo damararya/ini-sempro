@@ -77,6 +77,7 @@ RUN echo '#!/bin/bash\n\
 php artisan config:clear\n\
 php artisan cache:clear\n\
 php artisan migrate --force\n\
+php artisan db:seed --force\n\
 php artisan view:cache\n\
 /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf' > /start.sh && chmod +x /start.sh
 
