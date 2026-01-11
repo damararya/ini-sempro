@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import React from 'react';
 
 const formatIDR = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n || 0);
@@ -24,7 +24,7 @@ export default function Pay(props) {
 
     React.useEffect(() => {
         setData('amount', fixedAmount);
-    }, [fixedAmount, setData]);
+    }, [fixedAmount]);
 
     const isAdmin = Boolean(props?.auth?.user?.is_admin);
     const isSampah = type === 'sampah';
@@ -39,6 +39,10 @@ export default function Pay(props) {
                 reset('amount');
             },
         });
+    };
+
+    const submitManual = () => {
+        router.post(route('iuran.pay.manual', { type }), {}, { preserveScroll: true });
     };
 
     const handleProofChange = (event) => {
@@ -164,6 +168,9 @@ export default function Pay(props) {
                                 <PrimaryButton type="submit" disabled={processing}>
                                     {processing ? 'Memproses...' : 'Bayar Sekarang'}
                                 </PrimaryButton>
+                                <SecondaryButton type="button" onClick={submitManual}>
+                                    Bayar Manual (Upload Bukti)
+                                </SecondaryButton>
                                 <Link href={route('dashboard')} className={navLinkClass}>
                                     Kembali ke Dasbor
                                 </Link>
@@ -235,6 +242,7 @@ export default function Pay(props) {
                                         <th className="px-4 py-3 text-left">Nominal</th>
                                         <th className="px-4 py-3 text-left">Status</th>
                                         <th className="px-4 py-3 text-left">Bukti</th>
+                                        <th className="px-4 py-3 text-left">Invoice</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
@@ -267,6 +275,20 @@ export default function Pay(props) {
                                                         rel="noopener noreferrer"
                                                     >
                                                         Lihat
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-white/40">-</span>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                {p.id ? (
+                                                    <a
+                                                        href={route('iuran.invoice', p.id, false)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-300 transition hover:text-emerald-100"
+                                                    >
+                                                        PDF
                                                     </a>
                                                 ) : (
                                                     <span className="text-white/40">-</span>

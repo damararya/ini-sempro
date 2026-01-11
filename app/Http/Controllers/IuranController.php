@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Iuran;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -144,6 +147,82 @@ class IuranController extends Controller
         } catch (\RuntimeException $exception) {
             return $disk->response($path);
         }
+    }
+
+    /**
+     * Mengekspor laporan transparansi iuran ke PDF.
+     */
+    public function exportPdf(Request $request)
+    {
+        Iuran::expireStalePayments();
+
+        $month = (int) ($request->query('month') ?? now()->month);
+        $year = (int) ($request->query('year') ?? now()->year);
+
+        if ($month < 1 || $month > 12) {
+            $month = (int) now()->month;
+        }
+        if ($year < 2000) {
+            $year = (int) now()->year;
+        }
+
+        $start = Carbon::create($year, $month, 1)->startOfMonth();
+        $end = (clone $start)->endOfMonth();
+
+        $base = Iuran::query()
+            ->whereNotNull('paid_at')
+            ->where('paid', true)
+            ->whereBetween('paid_at', [$start, $end]);
+
+        $summary = [
+            'total' => (int) (clone $base)->sum('amount'),
+            'count' => (int) (clone $base)->count(),
+            'sampah_total' => (int) (clone $base)->where('type', 'sampah')->sum('amount'),
+            'sampah_count' => (int) (clone $base)->where('type', 'sampah')->count(),
+            'ronda_total' => (int) (clone $base)->where('type', 'ronda')->sum('amount'),
+            'ronda_count' => (int) (clone $base)->where('type', 'ronda')->count(),
+        ];
+
+        $monthLabels = [
+            1 => 'Jan',
+            2 => 'Feb',
+            3 => 'Mar',
+            4 => 'Apr',
+            5 => 'Mei',
+            6 => 'Jun',
+            7 => 'Jul',
+            8 => 'Agu',
+            9 => 'Sep',
+            10 => 'Okt',
+            11 => 'Nov',
+            12 => 'Des',
+        ];
+
+        $periodLabel = sprintf('%s %d', $monthLabels[$month], $year);
+        $filename = sprintf('transparansi-iuran-%d-%02d.pdf', $year, $month);
+
+        $pdf = Pdf::loadView('reports.iuran-transparency', [
+            'periodLabel' => $periodLabel,
+            'periodStart' => $start,
+            'periodEnd' => $end,
+            'summary' => $summary,
+            'expenses' => config('iuran_report.expenses', []),
+            'generatedAt' => now(),
+        ])->setPaper('a4', 'portrait');
+
+        $output = $pdf->output();
+        $outputLength = strlen($output);
+        Log::info('Iuran transparency PDF generated', [
+            'month' => $month,
+            'year' => $year,
+            'user_id' => $request->user()?->id,
+            'length' => $outputLength,
+        ]);
+
+        return response($output, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 
     /**

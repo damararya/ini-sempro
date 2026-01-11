@@ -56,7 +56,6 @@ export default function AdminDashboard(props) {
 
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     const yearOptions = Array.from({ length: 5 }, (_, index) => new Date().getFullYear() - index);
-
     const onChange = (event) => {
         const params = new URLSearchParams(window.location.search);
         params.set(event.target.name, event.target.value);
@@ -118,12 +117,22 @@ export default function AdminDashboard(props) {
                         </select>
                     </label>
 
-                    <Link
-                        href={route('admin.iurans.index')}
-                        className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/12 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/85 transition hover:border-white/30 hover:bg-white/16"
-                    >
-                        Kelola Iuran
-                    </Link>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <a
+                            href={route('admin.iurans.export', { month, year }, false)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center rounded-full border border-emerald-300/30 bg-emerald-300/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-100 transition hover:border-emerald-200/60 hover:bg-emerald-200/20"
+                        >
+                            Export PDF
+                        </a>
+                        <Link
+                            href={route('admin.iurans.index')}
+                            className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/12 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/85 transition hover:border-white/30 hover:bg-white/16"
+                        >
+                            Kelola Iuran
+                        </Link>
+                    </div>
                 </section>
 
                 <section className="grid grid-cols-1 gap-6 md:grid-cols-2">

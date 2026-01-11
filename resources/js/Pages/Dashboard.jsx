@@ -9,6 +9,9 @@ export default function Dashboard(props) {
     const trashPaid = props?.dashboard?.trashPaid ?? false;
     const rondaPaid = props?.dashboard?.rondaPaid ?? true;
     const isAdmin = Boolean(props?.auth?.user?.is_admin);
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
 
     const percent = Math.min(100, Math.round((collected / Math.max(1, target)) * 100));
     const formatIDR = (value) =>
@@ -27,6 +30,9 @@ export default function Dashboard(props) {
         </Link>
     );
 
+    const exportButtonClass =
+        'inline-flex items-center justify-center rounded-full border border-emerald-300/30 bg-emerald-300/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-100 transition hover:border-emerald-200/60 hover:bg-emerald-200/20';
+
     return (
         <AuthenticatedLayout
             auth={props.auth}
@@ -40,8 +46,20 @@ export default function Dashboard(props) {
                             Pantau iuran, cek tanggungan keluarga, dan ikuti perkembangan terbaru lingkungan Blok F.
                         </p>
                     </div>
-                    <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-right text-xs text-white/60">
-                        <div>{new Date().toLocaleString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                    <div className="flex flex-wrap items-center gap-3">
+                        {!isAdmin && (
+                            <a
+                                href={route('iuran.transparency', { month, year }, false)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={exportButtonClass}
+                            >
+                                Transparansi PDF
+                            </a>
+                        )}
+                        <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-right text-xs text-white/60">
+                            <div>{now.toLocaleString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                        </div>
                     </div>
                 </div>
             }

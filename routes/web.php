@@ -58,12 +58,23 @@ Route::middleware('auth')->group(function () { // Membuat grup rute yang membutu
             Route::get('/dashboard', AdminDashboardController::class) // Rute dashboard admin berbasis single action controller
                 ->name('dashboard'); // Menjaga nama rute lama agar kompatibel
 
+            Route::get('/iurans/export/pdf', [IuranController::class, 'exportPdf']) // Export laporan transparansi iuran
+                ->name('iurans.export'); // Nama rute export PDF iuran
+
             Route::get('/iurans/{iuran}/proof', [IuranController::class, 'proof']) // Rute untuk melihat bukti pembayaran iuran
                 ->name('iurans.proof'); // Nama rute bukti iuran admin (otomatis diawali admin.)
 
             Route::resource('iurans', IuranController::class) // Resource controller untuk CRUD iuran admin
                 ->except(['show']); // Menghapus aksi show karena tidak diperlukan
         });
+
+    // Laporan transparansi untuk warga (PDF)
+    Route::get('/iuran/transparency/pdf', [IuranController::class, 'exportPdf'])
+        ->name('iuran.transparency');
+
+    // Invoice iuran per transaksi untuk warga
+    Route::get('/iuran/invoice/{iuran}', [UserIuranController::class, 'invoice'])
+        ->name('iuran.invoice');
 
     // User-facing payment routes (blocked for admin role)
     Route::middleware('no-admin-payments')->group(function () {
@@ -73,6 +84,9 @@ Route::middleware('auth')->group(function () { // Membuat grup rute yang membutu
         Route::post('/iuran/pay/{type}', [UserIuranController::class, 'store']) // Menyimpan pembayaran iuran yang dikirim user
             ->whereIn('type', ['sampah', 'ronda']) // Membatasi jenis iuran yang valid
             ->name('iuran.pay.store'); // Memberi nama rute penyimpanan pembayaran iuran
+        Route::post('/iuran/manual/{type}', [UserIuranController::class, 'storeManual'])
+            ->whereIn('type', ['sampah', 'ronda'])
+            ->name('iuran.pay.manual');
         Route::post('/iuran/proof/{iuran}', [UserIuranController::class, 'storeProof']) // Menyimpan bukti pembayaran iuran
             ->name('iuran.pay.proof'); // Memberi nama rute unggah bukti pembayaran
         Route::get('/iuran/proof/{iuran}', [UserIuranController::class, 'showProof']) // Menampilkan bukti pembayaran iuran untuk pemilik atau admin

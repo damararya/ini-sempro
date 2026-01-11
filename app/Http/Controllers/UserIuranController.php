@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Iuran;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -190,6 +191,50 @@ class UserIuranController extends Controller
     }
 
     /**
+     * Membuat pembayaran manual tanpa gateway.
+     */
+    public function storeManual(Request $request, string $type)
+    {
+        abort_unless(in_array($type, ['sampah', 'ronda'], true), 404);
+
+        Iuran::expireStalePayments();
+
+        $user = $request->user();
+        $fixedAmount = Iuran::FIXED_AMOUNT;
+
+        $pendingCandidate = Iuran::query()
+            ->where('user_id', $user->id)
+            ->where('type', $type)
+            ->where(function ($q) {
+                $q->where('paid', false)
+                  ->orWhereNull('proof_path');
+            })
+            ->orderBy('paid')
+            ->orderByDesc('paid_at')
+            ->orderByDesc('updated_at')
+            ->first();
+
+        if ($pendingCandidate) {
+            return redirect()
+                ->route('iuran.pay.create', ['type' => $type])
+                ->with('message', 'Masih ada pembayaran yang menunggu bukti. Silakan unggah bukti terlebih dahulu.');
+        }
+
+        Iuran::create([
+            'user_id' => $user->id,
+            'type' => $type,
+            'amount' => $fixedAmount,
+            'paid' => false,
+            'paid_at' => null,
+            'proof_path' => null,
+        ]);
+
+        return redirect()
+            ->route('iuran.pay.create', ['type' => $type])
+            ->with('message', 'Pembayaran manual dibuat. Silakan unggah bukti transfer.');
+    }
+
+    /**
      * Menampilkan bukti pembayaran yang diunggah pengguna atau admin.
      */
     public function showProof(Request $request, Iuran $iuran)
@@ -220,6 +265,51 @@ class UserIuranController extends Controller
         } catch (\RuntimeException $exception) {
             return $disk->response($path);
         }
+    }
+
+    /**
+     * Menghasilkan invoice PDF untuk pembayaran iuran pengguna.
+     */
+    public function invoice(Request $request, Iuran $iuran)
+    {
+        $user = $request->user();
+
+        abort_unless(
+            $iuran->user_id === $user->id || $user->can('access-admin'),
+            403
+        );
+
+        $iuran->loadMissing('user');
+
+        $periodMonths = Iuran::PAYMENT_PERIOD_MONTHS;
+        $baseDate = $iuran->paid_at ?? $iuran->created_at ?? now();
+        $periodStart = (clone $baseDate)->subMonthsNoOverflow(max(0, $periodMonths - 1))->startOfMonth();
+        $periodEnd = (clone $baseDate)->endOfMonth();
+        $periodLabel = $periodMonths <= 1
+            ? $periodEnd->translatedFormat('F Y')
+            : sprintf('%s - %s', $periodStart->translatedFormat('F Y'), $periodEnd->translatedFormat('F Y'));
+
+        $filename = sprintf('invoice-iuran-%s-%s.pdf', $iuran->type, $iuran->id);
+
+        $pdf = Pdf::loadView('reports.iuran-invoice', [
+            'iuran' => $iuran,
+            'user' => $iuran->user,
+            'periodLabel' => $periodLabel,
+            'generatedAt' => now(),
+        ])->setPaper('a4', 'portrait');
+
+        $output = $pdf->output();
+        $outputLength = strlen($output);
+        Log::info('Iuran invoice PDF generated', [
+            'iuran_id' => $iuran->id,
+            'user_id' => $request->user()?->id,
+            'length' => $outputLength,
+        ]);
+
+        return response($output, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 
     /**
