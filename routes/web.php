@@ -16,6 +16,7 @@ use App\Http\Controllers\UserIuranController;
 use App\Http\Controllers\DashboardController;
 // Mengimpor controller dashboard utama
 use App\Http\Controllers\MidtransController;
+use App\Http\Controllers\ExpenseController;
 // Mengimpor controller Midtrans untuk menangani callback pembayaran
 
 /*
@@ -66,6 +67,8 @@ Route::middleware('auth')->group(function () { // Membuat grup rute yang membutu
 
             Route::resource('iurans', IuranController::class) // Resource controller untuk CRUD iuran admin
                 ->except(['show']); // Menghapus aksi show karena tidak diperlukan
+
+            Route::resource('expenses', ExpenseController::class)->except(['show']); // Kelola pengeluaran untuk laporan transparansi
         });
 
     // Laporan transparansi untuk warga (PDF)

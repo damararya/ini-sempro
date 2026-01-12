@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Iuran;
 use App\Models\User;
+use App\Models\Expense;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Illuminate\Support\Str;
+use Throwable;
 
 class IuranController extends Controller
 {
@@ -183,6 +186,66 @@ class IuranController extends Controller
             'ronda_count' => (int) (clone $base)->where('type', 'ronda')->count(),
         ];
 
+        $transactionsByType = [];
+        foreach (['sampah', 'ronda'] as $typeKey) {
+            $transactionsByType[$typeKey] = Iuran::query()
+                ->with('user:id,name,email')
+                ->whereNotNull('paid_at')
+                ->where('paid', true)
+                ->where('type', $typeKey)
+                ->whereBetween('paid_at', [$start, $end])
+                ->orderByDesc('paid_at')
+                ->orderByDesc('updated_at')
+                ->get()
+                ->map(function (Iuran $iuran) {
+                    return [
+                        'date' => optional($iuran->paid_at)->format('d/m'),
+                        'source' => $iuran->user?->name ?? 'Tidak diketahui',
+                        'note' => $iuran->order_id ?: 'Manual',
+                        'amount' => (int) $iuran->amount,
+                        'proof_url' => $iuran->proof_url,
+                    ];
+                })
+                ->all();
+        }
+
+        $expenses = Expense::query()
+            ->where(function ($q) use ($start, $end) {
+                $q->whereBetween('spent_at', [$start, $end])
+                  ->orWhereNull('spent_at');
+            })
+            ->orderByDesc('spent_at')
+            ->orderByDesc('created_at')
+            ->get()
+            ->groupBy('type')
+            ->map(function ($group) {
+                return $group->map(function (Expense $expense) {
+                    return [
+                        'label' => $expense->label,
+                        'detail' => $expense->detail,
+                        'amount' => (int) $expense->amount,
+                        'proof_ref' => $expense->proof_ref,
+                        'date' => optional($expense->spent_at)->format('d/m'),
+                    ];
+                })->all();
+            })->toArray();
+
+        // Fallback ke konfigurasi statis jika tidak ada data DB untuk jenis tertentu
+        $fallbackExpenses = config('iuran_report.expenses', []);
+        foreach (['sampah', 'ronda'] as $typeKey) {
+            if (empty($expenses[$typeKey]) && !empty($fallbackExpenses[$typeKey])) {
+                $expenses[$typeKey] = collect($fallbackExpenses[$typeKey])->map(function ($item) {
+                    return [
+                        'label' => $item['label'] ?? '-',
+                        'detail' => $item['detail'] ?? 'Rincian penggunaan',
+                        'amount' => (int) ($item['amount'] ?? 0),
+                        'proof_ref' => $item['proof_ref'] ?? null,
+                        'date' => $item['date'] ?? null,
+                    ];
+                })->all();
+            }
+        }
+
         $monthLabels = [
             1 => 'Jan',
             2 => 'Feb',
@@ -201,28 +264,60 @@ class IuranController extends Controller
         $periodLabel = sprintf('%s %d', $monthLabels[$month], $year);
         $filename = sprintf('transparansi-iuran-%d-%02d.pdf', $year, $month);
 
-        $pdf = Pdf::loadView('reports.iuran-transparency', [
-            'periodLabel' => $periodLabel,
-            'periodStart' => $start,
-            'periodEnd' => $end,
-            'summary' => $summary,
-            'expenses' => config('iuran_report.expenses', []),
-            'generatedAt' => now(),
-        ])->setPaper('a4', 'portrait');
+        try {
+            $pdf = Pdf::loadView('reports.iuran-transparency', [
+                'periodLabel' => $periodLabel,
+                'periodStart' => $start,
+                'periodEnd' => $end,
+                'summary' => $summary,
+                'expenses' => $expenses,
+                'transactionsByType' => $transactionsByType,
+                'generatedAt' => now(),
+            ])
+                ->setPaper('a4', 'portrait')
+                ->setWarnings(false)
+                ->setOptions([
+                    'isRemoteEnabled' => true,
+                    'isHtml5ParserEnabled' => true,
+                ]);
 
-        $output = $pdf->output();
-        $outputLength = strlen($output);
-        Log::info('Iuran transparency PDF generated', [
-            'month' => $month,
-            'year' => $year,
-            'user_id' => $request->user()?->id,
-            'length' => $outputLength,
-        ]);
+            $output = $pdf->output();
+            $outputLength = strlen($output);
+            Log::info('Iuran transparency PDF generated', [
+                'month' => $month,
+                'year' => $year,
+                'user_id' => $request->user()?->id,
+                'length' => $outputLength,
+            ]);
 
-        return response($output, 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+            // Simpan sementara agar header download standar, lalu hapus setelah dikirim.
+            $tempPath = 'reports/' . Str::uuid() . '.pdf';
+            $stored = Storage::disk('local')->put($tempPath, $output);
+            Log::info('Iuran transparency PDF stored', [
+                'path' => $tempPath,
+                'stored' => $stored,
+                'size' => $outputLength,
+            ]);
+
+            if (!$stored) {
+                return response('Gagal menyimpan PDF transparansi.', 500);
+            }
+
+            return response()->download(
+                Storage::disk('local')->path($tempPath),
+                $filename,
+                ['Content-Type' => 'application/pdf']
+            )->deleteFileAfterSend(true);
+        } catch (Throwable $e) {
+            Log::error('Iuran transparency PDF failed', [
+                'month' => $month,
+                'year' => $year,
+                'user_id' => $request->user()?->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response('Gagal membuat PDF transparansi.', 500);
+        }
     }
 
     /**

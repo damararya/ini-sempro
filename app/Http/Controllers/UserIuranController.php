@@ -291,25 +291,54 @@ class UserIuranController extends Controller
 
         $filename = sprintf('invoice-iuran-%s-%s.pdf', $iuran->type, $iuran->id);
 
-        $pdf = Pdf::loadView('reports.iuran-invoice', [
-            'iuran' => $iuran,
-            'user' => $iuran->user,
-            'periodLabel' => $periodLabel,
-            'generatedAt' => now(),
-        ])->setPaper('a4', 'portrait');
+        try {
+            $pdf = Pdf::loadView('reports.iuran-invoice', [
+                'iuran' => $iuran,
+                'user' => $iuran->user,
+                'periodLabel' => $periodLabel,
+                'generatedAt' => now(),
+            ])
+                ->setPaper('a4', 'portrait')
+                ->setWarnings(false) // Pastikan warning dompdf tidak merusak output binary
+                ->setOptions([
+                    'isRemoteEnabled' => true,
+                    'isHtml5ParserEnabled' => true,
+                ]);
 
-        $output = $pdf->output();
-        $outputLength = strlen($output);
-        Log::info('Iuran invoice PDF generated', [
-            'iuran_id' => $iuran->id,
-            'user_id' => $request->user()?->id,
-            'length' => $outputLength,
-        ]);
+            $output = $pdf->output();
+            $outputLength = strlen($output);
+            Log::info('Iuran invoice PDF generated', [
+                'iuran_id' => $iuran->id,
+                'user_id' => $request->user()?->id,
+                'length' => $outputLength,
+            ]);
 
-        return response($output, 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+            // Simpan sementara agar bisa diunduh dengan header standar dan otomatis terhapus.
+            $tempPath = 'reports/' . Str::uuid() . '.pdf';
+            $stored = Storage::disk('local')->put($tempPath, $output);
+            Log::info('Iuran invoice PDF stored', [
+                'path' => $tempPath,
+                'stored' => $stored,
+                'size' => $outputLength,
+            ]);
+
+            if (!$stored) {
+                return response('Gagal menyimpan PDF invoice.', 500);
+            }
+
+            return response()->download(
+                Storage::disk('local')->path($tempPath),
+                $filename,
+                ['Content-Type' => 'application/pdf']
+            )->deleteFileAfterSend(true);
+        } catch (\Throwable $e) {
+            Log::error('Iuran invoice PDF failed', [
+                'iuran_id' => $iuran->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response('Gagal membuat PDF invoice.', 500);
+        }
     }
 
     /**
