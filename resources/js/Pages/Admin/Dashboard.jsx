@@ -46,7 +46,7 @@ const StatCard = ({ label, value, icon: Icon, toneClass, accent }) => (
 );
 
 export default function AdminDashboard(props) {
-    const { stats, filters, trend, families = [] } = props;
+    const { stats, filters, families = [] } = props;
     const collected = stats?.totalKeseluruhan ?? 0;
     const totalKeluarga = stats?.totalKeluarga ?? 0;
     const totalSampah = stats?.totalSampah ?? 0;
@@ -227,42 +227,6 @@ export default function AdminDashboard(props) {
                     )}
                 </section>
 
-                <section className="panel-muted px-6 py-8">
-                    <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                            <h3 className="text-lg font-semibold text-white">Tren 6 Bulan</h3>
-                            <p className="text-sm text-white/55">Total iuran yang masuk per bulan berdasarkan pilihan filter.</p>
-                        </div>
-                        <span className="rounded-full border border-white/15 px-3 py-1 text-xs font-semibold text-white/60">Ringkasan Historis</span>
-                    </div>
-
-                    {Array.isArray(trend) && trend.length > 0 ? (
-                        <div className="overflow-x-auto">
-                            <div className="flex h-56 items-end gap-6">
-                                {trend.map((item, index) => {
-                                    const max = Math.max(...trend.map((entry) => entry.keseluruhan || 0), 1);
-                                    const height = Math.round(((item.keseluruhan || 0) / max) * 100);
-                                    return (
-                                        <div key={index} className="flex flex-col items-center gap-3">
-                                            <div className="relative flex h-full w-12 items-end justify-center">
-                                                <div
-                                                    className="w-full rounded-full bg-gradient-to-br from-sky-500 via-indigo-500 to-blue-700 shadow-[0_18px_45px_-20px_rgba(37,99,235,0.8)]"
-                                                    style={{ height: `${height}%` }}
-                                                    title={`${item.label}: ${new Intl.NumberFormat('id-ID').format(item.keseluruhan || 0)}`}
-                                                ></div>
-                                            </div>
-                                            <span className="text-xs text-white/55">{item.label}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-5 text-sm text-white/60">
-                            Tidak ada data tren.
-                        </div>
-                    )}
-                </section>
             </div>
         </AuthenticatedLayout>
     );
