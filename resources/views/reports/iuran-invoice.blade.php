@@ -44,7 +44,8 @@
             $paidAt = optional($iuran->paid_at)->format('d M Y H:i');
             $orgName = env('COMMUNITY_NAME', 'Iuran Warga');
             $orgContact = env('COMMUNITY_CONTACT', '-');
-            $orgEmail = env('COMMUNITY_EMAIL', config('mail.from.address'));
+            // Gunakan email warga yang meminta invoice sebagai kontak email utama
+            $orgEmail = $user?->email ?? env('COMMUNITY_EMAIL', config('mail.from.address'));
             $treasurer = env('TREASURER_NAME', 'Bendahara');
             $treasurerPhone = env('TREASURER_PHONE', '-');
             $paymentChannel = env('PAYMENT_CHANNEL', 'Rekening/QRIS belum diisi');
