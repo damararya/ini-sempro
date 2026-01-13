@@ -80,13 +80,11 @@
                         <p><strong>Nama:</strong> {{ $user?->name ?? '-' }}</p>
                         <p><strong>Email:</strong> {{ $user?->email ?? '-' }}</p>
                         <p><strong>NIK:</strong> {{ $user?->nik ?? '-' }}</p>
-                        <p><strong>No. HP/WA:</strong> -</p>
                     </div>
                     <div style="display: table-cell; width: 50%; vertical-align: top;">
                         <h3>Diterbitkan oleh</h3>
                         <p><strong>Bendahara:</strong> {{ $treasurer }}</p>
                         <p><strong>Jabatan:</strong> Bendahara/Pengurus</p>
-                        <p><strong>No. HP/WA:</strong> {{ $treasurerPhone }}</p>
                         <p><strong>Rekening/QRIS:</strong> {{ $paymentChannel }}</p>
                     </div>
                 </div>
@@ -136,11 +134,6 @@
                     </tr>
                 </tfoot>
             </table>
-        </div>
-
-        <div class="section">
-            <h3>Instruksi Pembayaran</h3>
-            <p class="muted">Instruksi pembayaran tidak dicantumkan.</p>
         </div>
 
         <div class="section grid">
