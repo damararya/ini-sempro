@@ -78,6 +78,17 @@ return [
                 'log',
             ],
         ],
+
+        'resend' => [
+            'transport' => 'smtp',
+            'host' => env('RESEND_SMTP_HOST', 'smtp.resend.com'),
+            'port' => env('RESEND_SMTP_PORT', 587),
+            'encryption' => env('RESEND_SMTP_ENCRYPTION', 'tls'),
+            'username' => env('RESEND_SMTP_USERNAME', 'resend'),
+            'password' => env('RESEND_API_KEY'),
+            'timeout' => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN'),
+        ],
     ],
 
     /*
