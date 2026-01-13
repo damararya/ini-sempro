@@ -30,8 +30,11 @@ class AdminDashboardController extends Controller
         $totalKeseluruhan = (int) (clone $base)->sum('amount');
         $totalSampah = (int) (clone $base)->where('type', 'sampah')->sum('amount');
         $totalRonda = (int) (clone $base)->where('type', 'ronda')->sum('amount');
-        // Keluarga dihitung dari user yang telah login minimal sekali.
-        $totalKeluarga = (int) User::query()->whereNotNull('last_login_at')->count();
+        // Keluarga dihitung dari user non-admin yang telah login minimal sekali.
+        $totalKeluarga = (int) User::query()
+            ->where('is_admin', false)
+            ->whereNotNull('last_login_at')
+            ->count();
 
         // Kumpulkan tren enam bulan terakhir termasuk bulan terpilih.
         $trend = [];

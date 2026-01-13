@@ -168,9 +168,6 @@ export default function Pay(props) {
                                 <PrimaryButton type="submit" disabled={processing}>
                                     {processing ? 'Memproses...' : 'Bayar Sekarang'}
                                 </PrimaryButton>
-                                <SecondaryButton type="button" onClick={submitManual}>
-                                    Bayar Manual (Upload Bukti)
-                                </SecondaryButton>
                                 <Link href={route('dashboard')} className={navLinkClass}>
                                     Kembali ke Dasbor
                                 </Link>
