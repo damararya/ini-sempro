@@ -111,6 +111,9 @@ class UserIuranController extends Controller
         \Midtrans\Config::$isProduction = (bool) config('midtrans.is_production');
         \Midtrans\Config::$isSanitized = (bool) config('midtrans.is_sanitized');
         \Midtrans\Config::$is3ds = (bool) config('midtrans.is_3ds');
+        $notifUrl = rtrim((string) config('app.url'), '/') . '/midtrans/notification';
+        \Midtrans\Config::$overrideNotifUrl = $notifUrl;
+        \Midtrans\Config::$appendNotifUrl = $notifUrl;
 
         // order_id maximum 50 karakter: format {jenisCode}{userId}{bulanTahun}{random6} tanpa strip.
         $typeCode = $type === 'sampah' ? '1' : '2';
@@ -363,6 +366,12 @@ class UserIuranController extends Controller
             'proof_path' => $path,
             'paid' => true,
             'paid_at' => $iuran->paid_at ?? now(),
+        ]);
+
+        Log::info('Iuran proof uploaded', [
+            'iuran_id' => $iuran->id,
+            'user_id' => $user->id,
+            'path' => $path,
         ]);
 
         return back()->with('message', 'Bukti transfer berhasil diunggah.');

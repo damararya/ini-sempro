@@ -103,5 +103,7 @@ Route::middleware('auth')->group(function () { // Membuat grup rute yang membutu
 Route::get('/payment/finish/{type?}', [MidtransController::class, 'finish'])->name('midtrans.finish'); // Menangani callback sukses pembayaran
 Route::get('/payment/unfinish', [MidtransController::class, 'unfinish'])->name('midtrans.unfinish'); // Menangani callback pembayaran belum selesai
 Route::get('/payment/error', [MidtransController::class, 'error'])->name('midtrans.error'); // Menangani callback pembayaran gagal
+// Midtrans server-to-server notification (tanpa prefix /api agar mudah dikonfigurasi di dashboard Midtrans)
+Route::post('/midtrans/notification', [MidtransController::class, 'notification'])->name('midtrans.notification');
 
 require __DIR__.'/auth.php'; // Memuat definisi rute autentikasi tambahan

@@ -25,14 +25,12 @@
         @php
             $formatIdr = fn ($value) => 'Rp ' . number_format((int) $value, 0, ',', '.');
             $orgName = env('COMMUNITY_NAME', 'Iuran Warga');
-            $orgContact = env('COMMUNITY_CONTACT', '-');
-            $orgEmail = env('COMMUNITY_EMAIL', config('mail.from.address'));
         @endphp
 
         {{-- Halaman 1: Ringkasan keseluruhan --}}
         <h1>LAPORAN TRANSPARANSI ARUS DANA</h1>
         <p class="muted">Periode: {{ $periodLabel }} | Dicetak: {{ $generatedAt->format('d M Y H:i') }}</p>
-        <p><strong>{{ $orgName }}</strong><br>Kontak: {{ $orgContact }} @if($orgEmail) | Email: {{ $orgEmail }} @endif</p>
+        <p><strong>{{ $orgName }}</strong></p>
 
         <div class="section">
             <h2>Ringkasan Pemasukan</h2>
@@ -78,7 +76,7 @@
 
             <h1>LAPORAN TRANSPARANSI ARUS DANA</h1>
             <p class="muted">{{ $typeLabel }} · Periode: {{ $periodLabel }}</p>
-            <p><strong>{{ $orgName }}</strong><br>Disusun oleh: {{ env('TREASURER_NAME', 'Bendahara') }} | Kontak: {{ $orgContact }}</p>
+            <p><strong>{{ $orgName }}</strong><br>Disusun oleh: {{ env('TREASURER_NAME', 'Bendahara') }}</p>
 
             <table style="margin-top:10px;">
                 <tr>

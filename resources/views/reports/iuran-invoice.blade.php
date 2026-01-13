@@ -140,11 +140,7 @@
 
         <div class="section">
             <h3>Instruksi Pembayaran</h3>
-            <ul>
-                <li>Tunai: serahkan kepada {{ $treasurer }} / petugas yang ditunjuk.</li>
-                <li>Transfer: {{ $paymentChannel }}.</li>
-                <li>Konfirmasi pembayaran: kirim bukti ke WA {{ $treasurerPhone }}.</li>
-            </ul>
+            <p class="muted">Instruksi pembayaran tidak dicantumkan.</p>
         </div>
 
         <div class="section grid">

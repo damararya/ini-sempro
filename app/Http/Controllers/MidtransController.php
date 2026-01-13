@@ -19,6 +19,11 @@ class MidtransController extends Controller
         \Midtrans\Config::$isProduction = (bool) config('midtrans.is_production');
         \Midtrans\Config::$isSanitized = (bool) config('midtrans.is_sanitized');
         \Midtrans\Config::$is3ds = (bool) config('midtrans.is_3ds');
+
+        // Pastikan URL notifikasi konsisten dengan domain aplikasi.
+        $notifUrl = rtrim((string) config('app.url'), '/') . '/midtrans/notification';
+        \Midtrans\Config::$overrideNotifUrl = $notifUrl;
+        \Midtrans\Config::$appendNotifUrl = $notifUrl;
     }
 
     /**
@@ -59,6 +64,14 @@ class MidtransController extends Controller
     public function notification(Request $request)
     {
         $this->configure();
+
+        Log::info('Midtrans notification hit', [
+            'order_id' => $request->input('order_id'),
+            'transaction_status' => $request->input('transaction_status'),
+            'gross_amount' => $request->input('gross_amount'),
+            'via' => $request->getRequestUri(),
+            'notif_url' => \Midtrans\Config::$overrideNotifUrl ?? null,
+        ]);
 
         try {
             $notif = new \Midtrans\Notification();
@@ -143,6 +156,12 @@ class MidtransController extends Controller
                         'paid' => true,
                         'paid_at' => now(),
                     ]);
+                    Log::info('Midtrans notification applied to existing iuran', [
+                        'order_id' => $orderId,
+                        'iuran_id' => $iuran->id,
+                        'user_id' => $iuran->user_id,
+                        'type' => $type,
+                    ]);
                 } elseif ($userId) {
                     $start = now()->copy()->startOfMonth();
                     $end = now()->copy()->endOfMonth();
@@ -156,22 +175,33 @@ class MidtransController extends Controller
                         ->first();
 
                     if ($existing) {
-                        $existing->update([
-                            'amount' => (int) $existing->amount + (int) $gross,
-                            'paid' => true,
-                            'paid_at' => now(),
-                            'order_id' => $orderId,
-                        ]);
-                    } else {
-                        Iuran::create([
-                            'user_id' => $userId,
-                            'type' => $type,
-                            'amount' => (int) $gross,
-                            'paid' => true,
-                            'paid_at' => now(),
-                            'order_id' => $orderId,
-                        ]);
-                    }
+                            $existing->update([
+                                'amount' => (int) $existing->amount + (int) $gross,
+                                'paid' => true,
+                                'paid_at' => now(),
+                                'order_id' => $orderId,
+                            ]);
+                            Log::info('Midtrans notification merged into existing paid iuran', [
+                                'order_id' => $orderId,
+                                'iuran_id' => $existing->id,
+                                'user_id' => $existing->user_id,
+                                'type' => $type,
+                            ]);
+                        } else {
+                            Iuran::create([
+                                'user_id' => $userId,
+                                'type' => $type,
+                                'amount' => (int) $gross,
+                                'paid' => true,
+                                'paid_at' => now(),
+                                'order_id' => $orderId,
+                            ]);
+                            Log::info('Midtrans notification created new iuran', [
+                                'order_id' => $orderId,
+                                'user_id' => $userId,
+                                'type' => $type,
+                            ]);
+                        }
                 } else {
                     Log::warning('Midtrans notification without matching user record', [
                         'order_id' => $orderId,
