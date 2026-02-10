@@ -321,6 +321,134 @@ class IuranController extends Controller
     }
 
     /**
+     * Mengekspor PDF status pembayaran seluruh warga.
+     */
+    public function exportWargaPdf(Request $request)
+    {
+        Iuran::expireStalePayments();
+
+        $month = (int) ($request->query('month') ?? now()->month);
+        $year = (int) ($request->query('year') ?? now()->year);
+
+        if ($month < 1 || $month > 12) {
+            $month = (int) now()->month;
+        }
+        if ($year < 2000) {
+            $year = (int) now()->year;
+        }
+
+        // Hitung batas periode pembayaran (3 bulan terakhir dari bulan terpilih).
+        $periodEnd = Carbon::create($year, $month, 1)->endOfMonth();
+        $periodStart = (clone $periodEnd)->subMonthsNoOverflow(Iuran::PAYMENT_PERIOD_MONTHS - 1)->startOfMonth();
+
+        // Ambil semua warga (non-admin) beserta status iuran pada periode ini.
+        $warga = User::query()
+            ->select('id', 'name', 'email', 'nik')
+            ->where('is_admin', false)
+            ->orderBy('name')
+            ->get()
+            ->map(function (User $user) use ($periodStart, $periodEnd) {
+                $paidSampah = Iuran::query()
+                    ->where('user_id', $user->id)
+                    ->where('type', 'sampah')
+                    ->where('paid', true)
+                    ->whereNotNull('paid_at')
+                    ->whereBetween('paid_at', [$periodStart, $periodEnd])
+                    ->exists();
+
+                $paidRonda = Iuran::query()
+                    ->where('user_id', $user->id)
+                    ->where('type', 'ronda')
+                    ->where('paid', true)
+                    ->whereNotNull('paid_at')
+                    ->whereBetween('paid_at', [$periodStart, $periodEnd])
+                    ->exists();
+
+                return [
+                    'name' => $user->name,
+                    'nik' => $user->nik,
+                    'paid_sampah' => $paidSampah,
+                    'paid_ronda' => $paidRonda,
+                ];
+            });
+
+        $totalWarga = $warga->count();
+        $summary = [
+            'total' => $totalWarga,
+            'sampah_paid' => $warga->where('paid_sampah', true)->count(),
+            'sampah_unpaid' => $warga->where('paid_sampah', false)->count(),
+            'ronda_paid' => $warga->where('paid_ronda', true)->count(),
+            'ronda_unpaid' => $warga->where('paid_ronda', false)->count(),
+        ];
+
+        $monthLabels = [
+            1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr',
+            5 => 'Mei', 6 => 'Jun', 7 => 'Jul', 8 => 'Agu',
+            9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des',
+        ];
+
+        $periodLabel = sprintf(
+            '%s %d – %s %d',
+            $monthLabels[$periodStart->month],
+            $periodStart->year,
+            $monthLabels[$periodEnd->month],
+            $periodEnd->year
+        );
+        $filename = sprintf('status-pembayaran-warga-%d-%02d.pdf', $year, $month);
+
+        try {
+            $pdf = Pdf::loadView('reports.warga-payment-status', [
+                'periodLabel' => $periodLabel,
+                'warga' => $warga,
+                'summary' => $summary,
+                'generatedAt' => now(),
+            ])
+                ->setPaper('a4', 'portrait')
+                ->setWarnings(false)
+                ->setOptions([
+                    'isRemoteEnabled' => true,
+                    'isHtml5ParserEnabled' => true,
+                ]);
+
+            $output = $pdf->output();
+            $outputLength = strlen($output);
+            Log::info('Warga payment status PDF generated', [
+                'month' => $month,
+                'year' => $year,
+                'user_id' => $request->user()?->id,
+                'length' => $outputLength,
+            ]);
+
+            $tempPath = 'reports/' . Str::uuid() . '.pdf';
+            $stored = Storage::disk('local')->put($tempPath, $output);
+            Log::info('Warga payment status PDF stored', [
+                'path' => $tempPath,
+                'stored' => $stored,
+                'size' => $outputLength,
+            ]);
+
+            if (!$stored) {
+                return response('Gagal menyimpan PDF status pembayaran.', 500);
+            }
+
+            return response()->download(
+                Storage::disk('local')->path($tempPath),
+                $filename,
+                ['Content-Type' => 'application/pdf']
+            )->deleteFileAfterSend(true);
+        } catch (Throwable $e) {
+            Log::error('Warga payment status PDF failed', [
+                'month' => $month,
+                'year' => $year,
+                'user_id' => $request->user()?->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response('Gagal membuat PDF status pembayaran.', 500);
+        }
+    }
+
+    /**
      * Menghapus data iuran.
      */
     public function destroy(Iuran $iuran)

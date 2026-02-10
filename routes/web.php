@@ -62,6 +62,9 @@ Route::middleware('auth')->group(function () { // Membuat grup rute yang membutu
             Route::get('/iurans/export/pdf', [IuranController::class, 'exportPdf']) // Export laporan transparansi iuran
                 ->name('iurans.export'); // Nama rute export PDF iuran
 
+            Route::get('/iurans/export/warga-pdf', [IuranController::class, 'exportWargaPdf']) // Export PDF status pembayaran warga
+                ->name('iurans.export.warga'); // Nama rute export PDF status warga
+
             Route::get('/iurans/{iuran}/proof', [IuranController::class, 'proof']) // Rute untuk melihat bukti pembayaran iuran
                 ->name('iurans.proof'); // Nama rute bukti iuran admin (otomatis diawali admin.)
 
