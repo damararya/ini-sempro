@@ -124,7 +124,15 @@ export default function AdminDashboard(props) {
                             rel="noopener noreferrer"
                             className="inline-flex items-center justify-center rounded-full border border-emerald-300/30 bg-emerald-300/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-100 transition hover:border-emerald-200/60 hover:bg-emerald-200/20"
                         >
-                            Export PDF
+                            Export Transparansi
+                        </a>
+                        <a
+                            href={route('admin.iurans.export.warga', { month, year }, false)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center rounded-full border border-sky-300/30 bg-sky-300/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-100 transition hover:border-sky-200/60 hover:bg-sky-200/20"
+                        >
+                            Export Status Warga
                         </a>
                         <Link
                             href={route('admin.iurans.index')}
