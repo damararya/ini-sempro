@@ -21,5 +21,13 @@ foreach ($directories as $directory) {
     }
 }
 
+// Hapus compiled views lama agar Vercel selalu menggunakan template terbaru.
+$viewsPath = '/tmp/storage/framework/views';
+if (is_dir($viewsPath)) {
+    foreach (glob($viewsPath . '/*.php') as $compiledView) {
+        @unlink($compiledView);
+    }
+}
+
 // Forward Vercel requests to Laravel's public/index.php
 require __DIR__ . '/../public/index.php';

@@ -44,8 +44,22 @@
         @endphp
 
         <h1>LAPORAN STATUS PEMBAYARAN IURAN WARGA</h1>
-        <p class="muted">Periode {{ $periodMonths }} Bulan: {{ $periodLabel }} | Dicetak: {{ $generatedAt->format('d M Y H:i') }}</p>
         <p><strong>{{ $orgName }}</strong></p>
+        <p class="muted">Dicetak: {{ $generatedAt->format('d M Y H:i') }}</p>
+
+        {{-- Info Periode --}}
+        <div class="section">
+            <table>
+                <tr>
+                    <th style="width: 25%;">Durasi Periode</th>
+                    <td style="width: 75%;">{{ $periodMonths }} Bulan</td>
+                </tr>
+                <tr>
+                    <th>Rentang Periode</th>
+                    <td>{{ $periodLabel }}</td>
+                </tr>
+            </table>
+        </div>
 
         {{-- Ringkasan --}}
         <div class="section">
