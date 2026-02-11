@@ -120,14 +120,6 @@ export default function AdminDashboard(props) {
                     </label>
 
                     <div className="flex flex-wrap items-center gap-3">
-                        <a
-                            href={route('admin.iurans.export', { month, year }, false)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center rounded-full border border-emerald-300/30 bg-emerald-300/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-100 transition hover:border-emerald-200/60 hover:bg-emerald-200/20"
-                        >
-                            Export Transparansi
-                        </a>
                         <select
                             value={period}
                             onChange={(e) => setPeriod(Number(e.target.value))}
@@ -137,6 +129,14 @@ export default function AdminDashboard(props) {
                             <option value={6} className="text-slate-900">6 Bulan</option>
                             <option value={12} className="text-slate-900">12 Bulan</option>
                         </select>
+                        <a
+                            href={route('admin.iurans.export', { month, year, period }, false)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center rounded-full border border-emerald-300/30 bg-emerald-300/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-100 transition hover:border-emerald-200/60 hover:bg-emerald-200/20"
+                        >
+                            Export Transparansi
+                        </a>
                         <a
                             href={route('admin.iurans.export.warga', { month, year, period }, false)}
                             target="_blank"

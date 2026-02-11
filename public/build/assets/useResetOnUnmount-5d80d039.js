@@ -1,1 +1,0 @@
-import{r}from"./app-6e495c78.js";function f(t,...n){const e=r.useRef(t),u=r.useRef(n);e.current=t,u.current=n,r.useEffect(()=>()=>{typeof e.current=="function"&&e.current(...u.current)},[])}export{f as u};

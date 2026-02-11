@@ -29,8 +29,19 @@
 
         {{-- Halaman 1: Ringkasan keseluruhan --}}
         <h1>LAPORAN TRANSPARANSI ARUS DANA</h1>
-        <p class="muted">Periode: {{ $periodLabel }} | Dicetak: {{ $generatedAt->format('d M Y H:i') }}</p>
         <p><strong>{{ $orgName }}</strong></p>
+        <p class="muted">Dicetak: {{ $generatedAt->format('d M Y H:i') }}</p>
+
+        <table style="margin-top: 8px; margin-bottom: 8px;">
+            <tr>
+                <th style="width: 25%;">Durasi Periode</th>
+                <td style="width: 75%;">{{ $periodMonths }} Bulan</td>
+            </tr>
+            <tr>
+                <th>Rentang Periode</th>
+                <td>{{ $periodLabel }}</td>
+            </tr>
+        </table>
 
         <div class="section">
             <h2>Ringkasan Pemasukan</h2>
@@ -75,7 +86,7 @@
             @endphp
 
             <h1>LAPORAN TRANSPARANSI ARUS DANA</h1>
-            <p class="muted">{{ $typeLabel }} · Periode: {{ $periodLabel }}</p>
+            <p class="muted">{{ $typeLabel }} · Periode {{ $periodMonths }} Bulan: {{ $periodLabel }}</p>
             <p><strong>{{ $orgName }}</strong><br>Disusun oleh: {{ env('TREASURER_NAME', 'Bendahara') }}</p>
 
             <table style="margin-top:10px;">

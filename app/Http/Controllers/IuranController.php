@@ -169,8 +169,14 @@ class IuranController extends Controller
             $year = (int) now()->year;
         }
 
-        $start = Carbon::create($year, $month, 1)->startOfMonth();
-        $end = (clone $start)->endOfMonth();
+        // Periode yang dipilih (3, 6, atau 12 bulan). Default 3.
+        $period = (int) ($request->query('period') ?? 3);
+        if (!in_array($period, [3, 6, 12])) {
+            $period = 3;
+        }
+
+        $end = Carbon::create($year, $month, 1)->endOfMonth();
+        $start = (clone $end)->subMonthsNoOverflow($period - 1)->startOfMonth();
 
         $base = Iuran::query()
             ->whereNotNull('paid_at')
@@ -261,12 +267,19 @@ class IuranController extends Controller
             12 => 'Des',
         ];
 
-        $periodLabel = sprintf('%s %d', $monthLabels[$month], $year);
-        $filename = sprintf('transparansi-iuran-%d-%02d.pdf', $year, $month);
+        $periodLabel = sprintf(
+            '%s %d - %s %d',
+            $monthLabels[$start->month],
+            $start->year,
+            $monthLabels[$end->month],
+            $end->year
+        );
+        $filename = sprintf('transparansi-iuran-%d-%02d-%dbulan.pdf', $year, $month, $period);
 
         try {
             $pdf = Pdf::loadView('reports.iuran-transparency', [
                 'periodLabel' => $periodLabel,
+                'periodMonths' => $period,
                 'periodStart' => $start,
                 'periodEnd' => $end,
                 'summary' => $summary,
