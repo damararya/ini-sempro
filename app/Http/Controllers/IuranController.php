@@ -405,6 +405,7 @@ class IuranController extends Controller
         try {
             $pdf = Pdf::loadView('reports.warga-payment-status', [
                 'periodLabel' => $periodLabel,
+                'periodMonths' => $period,
                 'warga' => $warga,
                 'summary' => $summary,
                 'generatedAt' => now(),
