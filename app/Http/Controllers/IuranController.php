@@ -337,9 +337,15 @@ class IuranController extends Controller
             $year = (int) now()->year;
         }
 
-        // Hitung batas periode pembayaran (3 bulan terakhir dari bulan terpilih).
+        // Periode yang dipilih (3, 6, atau 12 bulan).
+        $period = (int) ($request->query('period') ?? 3);
+        if (!in_array($period, [3, 6, 12])) {
+            $period = 3;
+        }
+
+        // Hitung batas periode pembayaran berdasarkan jumlah bulan terpilih.
         $periodEnd = Carbon::create($year, $month, 1)->endOfMonth();
-        $periodStart = (clone $periodEnd)->subMonthsNoOverflow(Iuran::PAYMENT_PERIOD_MONTHS - 1)->startOfMonth();
+        $periodStart = (clone $periodEnd)->subMonthsNoOverflow($period - 1)->startOfMonth();
 
         // Ambil semua warga (non-admin) beserta status iuran pada periode ini.
         $warga = User::query()
@@ -394,7 +400,7 @@ class IuranController extends Controller
             $monthLabels[$periodEnd->month],
             $periodEnd->year
         );
-        $filename = sprintf('status-pembayaran-warga-%d-%02d.pdf', $year, $month);
+        $filename = sprintf('status-pembayaran-warga-%d-%02d-%dbulan.pdf', $year, $month, $period);
 
         try {
             $pdf = Pdf::loadView('reports.warga-payment-status', [
@@ -415,6 +421,7 @@ class IuranController extends Controller
             Log::info('Warga payment status PDF generated', [
                 'month' => $month,
                 'year' => $year,
+                'period' => $period,
                 'user_id' => $request->user()?->id,
                 'length' => $outputLength,
             ]);
@@ -440,6 +447,7 @@ class IuranController extends Controller
             Log::error('Warga payment status PDF failed', [
                 'month' => $month,
                 'year' => $year,
+                'period' => $period,
                 'user_id' => $request->user()?->id,
                 'error' => $e->getMessage(),
             ]);

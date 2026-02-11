@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { BanknotesIcon, UsersIcon, TrashIcon, ShieldCheckIcon } from '@heroicons/react/24/solid';
@@ -54,6 +55,7 @@ export default function AdminDashboard(props) {
     const month = filters?.month ?? new Date().getMonth() + 1;
     const year = filters?.year ?? new Date().getFullYear();
 
+    const [period, setPeriod] = useState(3);
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     const yearOptions = Array.from({ length: 5 }, (_, index) => new Date().getFullYear() - index);
     const onChange = (event) => {
@@ -126,8 +128,17 @@ export default function AdminDashboard(props) {
                         >
                             Export Transparansi
                         </a>
+                        <select
+                            value={period}
+                            onChange={(e) => setPeriod(Number(e.target.value))}
+                            className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs text-white/80 shadow-inner shadow-black/20 focus:border-sky-400/70 focus:outline-none focus:ring-2 focus:ring-sky-300/40 focus:ring-offset-2 focus:ring-offset-[#040112]"
+                        >
+                            <option value={3} className="text-slate-900">3 Bulan</option>
+                            <option value={6} className="text-slate-900">6 Bulan</option>
+                            <option value={12} className="text-slate-900">12 Bulan</option>
+                        </select>
                         <a
-                            href={route('admin.iurans.export.warga', { month, year }, false)}
+                            href={route('admin.iurans.export.warga', { month, year, period }, false)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center justify-center rounded-full border border-sky-300/30 bg-sky-300/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-100 transition hover:border-sky-200/60 hover:bg-sky-200/20"
